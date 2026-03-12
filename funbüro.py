@@ -4,52 +4,64 @@ from PIL import Image, ImageOps
 import numpy as np
 import os
 
-np.set_printoptions(suppress=True)
+# ----------------------
+# Streamlit Setup
+# ----------------------
+st.set_page_config(page_title="Fundbüro KI", page_icon="🔍")
+st.title("🔍 Fundbüro KI Bild-Erkennung")
+st.write("Lade ein Bild hoch und die KI zeigt, welchem Fundstück es am ähnlichsten ist.")
 
-st.title("🔎 KI Fundbüro")
-st.write("Lade ein Bild hoch und die KI erkennt das Objekt.")
-
-# Pfade definieren
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# ----------------------
+# Absolute Pfade zum Modell und den Labels
+# ----------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Ordner, in dem app.py liegt
 MODEL_PATH = os.path.join(BASE_DIR, "model", "keras_Model.h5")
 LABELS_PATH = os.path.join(BASE_DIR, "model", "labels.txt")
 
-# Modell laden
+# ----------------------
+# Lade Modell
+# ----------------------
+if not os.path.exists(MODEL_PATH):
+    st.error(f"Modell-Datei nicht gefunden: {MODEL_PATH}")
+    st.stop()
+
 model = load_model(MODEL_PATH, compile=False)
 
-# Labels laden
-with open(LABELS_PATH, "r") as f:
-    class_names = f.readlines()
+# ----------------------
+# Lade Labels
+# ----------------------
+if not os.path.exists(LABELS_PATH):
+    st.error(f"Labels-Datei nicht gefunden: {LABELS_PATH}")
+    st.stop()
 
+with open(LABELS_PATH, "r") as f:
+    class_names = [line.strip() for line in f.readlines()]
+
+# ----------------------
 # Bild Upload
-uploaded_file = st.file_uploader("Bild hochladen", type=["jpg","jpeg","png"])
+# ----------------------
+uploaded_file = st.file_uploader("Bild hochladen (jpg, jpeg, png)", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-
+    # Bild öffnen
     image = Image.open(uploaded_file).convert("RGB")
-
     st.image(image, caption="Hochgeladenes Bild", use_column_width=True)
 
+    # Array vorbereiten
     data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
-
     size = (224, 224)
-    image = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
-
-    image_array = np.asarray(image)
-
+    image_resized = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
+    image_array = np.asarray(image_resized)
     normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
-
     data[0] = normalized_image_array
 
+    # Vorhersage
     prediction = model.predict(data)
-
     index = np.argmax(prediction)
-
     class_name = class_names[index]
-
     confidence_score = prediction[0][index]
 
-    st.subheader("Ergebnis")
-
-    st.write("Erkanntes Objekt:", class_name[2:])
-    st.write("Confidence Score:", float(confidence_score))
+    # Ergebnis anzeigen
+    st.subheader("Ergebnis der KI")
+    st.write(f"Erkanntes Objekt: **{class_name[2:] if len(class_name) > 2 else class_name}**")
+    st.write(f"Confidence Score: {confidence_score*100:.2f}%")
