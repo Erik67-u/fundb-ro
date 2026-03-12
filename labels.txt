@@ -1,3 +1,3 @@
-Schere
-Stein
-Bier
+0 Schere
+1 Stein
+2 Bier
