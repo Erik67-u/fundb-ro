@@ -5,40 +5,40 @@ import numpy as np
 import os
 
 # ----------------------
-# Streamlit Setup
+# Setup
 # ----------------------
 st.set_page_config(page_title="Fundbüro KI", page_icon="🔍")
 st.title("🔍 Fundbüro KI Bild-Erkennung")
-st.write("Lade ein Bild hoch und die KI zeigt, welchem Fundstück es am ähnlichsten ist.")
+st.write("Lade ein Bild hoch und die KI erkennt, welchem Fundstück es ähnlich sieht.")
 
 # ----------------------
-# Absolute Pfade zum Modell und den Labels
+# Absoluter Pfad zum Modell und den Labels
 # ----------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Ordner, in dem app.py liegt
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "model", "keras_Model.h5")
 LABELS_PATH = os.path.join(BASE_DIR, "model", "labels.txt")
 
 # ----------------------
-# Lade Modell
+# Modell laden
 # ----------------------
 if not os.path.exists(MODEL_PATH):
-    st.error(f"Modell-Datei nicht gefunden: {MODEL_PATH}")
+    st.error(f"Fehler: Modell-Datei nicht gefunden unter {MODEL_PATH}")
     st.stop()
 
 model = load_model(MODEL_PATH, compile=False)
 
 # ----------------------
-# Lade Labels
+# Labels laden
 # ----------------------
 if not os.path.exists(LABELS_PATH):
-    st.error(f"Labels-Datei nicht gefunden: {LABELS_PATH}")
+    st.error(f"Fehler: Labels-Datei nicht gefunden unter {LABELS_PATH}")
     st.stop()
 
 with open(LABELS_PATH, "r") as f:
     class_names = [line.strip() for line in f.readlines()]
 
 # ----------------------
-# Bild Upload
+# Bild-Upload
 # ----------------------
 uploaded_file = st.file_uploader("Bild hochladen (jpg, jpeg, png)", type=["jpg", "jpeg", "png"])
 
